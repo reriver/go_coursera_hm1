@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 )
 
 func dirTree(out io.Writer, path string, printFiles bool) error {
@@ -79,12 +80,12 @@ func scanDir(out io.Writer, path string, printFiles bool, shift int, prefix []ru
 			//fmt.Println("filesLeftInDirectory: ", filesLeftInDirectory)
 			//fmt.Println( "Entering new directory; >" + path + "/" + file.Name() + "<")
 			if filesLeftInDirectory > 0 {
-				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("│   ")...))
+				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("│\t")...))
 				if err2 != nil {
 					return err2
 				}
 			} else {
-				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("    ")...))
+				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("\t")...))
 				if err2 != nil {
 					return err2
 				}
@@ -100,17 +101,23 @@ func printFile(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefi
 	//	fmt.Printf("│   ")
 	//}
 	fmt.Fprintf(out, string(prefix))
+	var size string
+	if file.Size() > 0 {
+		size = strconv.Itoa(int(file.Size())) + "b"
+	} else {
+		size = "empty"
+	}
 	if *filesLeftInDirectory > 1 {
 		//_, err := fmt.Println("├───"+file.Name(), "         left ", filesLeftInDirectory, "\t shift ", shift)
 		//_, err := fmt.Printf("├───%.10s         left %d shift %d\n", file.Name(), *filesLeftInDirectory, shift)
 		//_, err := fmt.Printf("├───%s\n", file.Name())
-		_, err := fmt.Fprintf(out, "├───%s\n", file.Name())
+		_, err := fmt.Fprintf(out, "├───%s (%s)\n", file.Name(), size)
 		*filesLeftInDirectory--
 		return err
 	} else {
 		//_, err := fmt.Println("└───"+file.Name(), "         left ", filesLeftInDirectory, "\t shift ", shift)
 		//_, err := fmt.Printf("└───%.10s         left %d shift %d\n", file.Name(), *filesLeftInDirectory, shift)
-		_, err := fmt.Fprintf(out, "└───%s\n", file.Name())
+		_, err := fmt.Fprintf(out, "└───%s (%s)\n", file.Name(), size)
 		*filesLeftInDirectory--
 		return err
 	}
