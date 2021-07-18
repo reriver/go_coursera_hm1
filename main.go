@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -72,7 +71,7 @@ func scanDir(out io.Writer, path string, printFiles bool, shift int, prefix []ru
 	return err
 }
 
-func printFile(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefix []rune) error {
+func printFile(out io.Writer, file os.FileInfo, filesLeftInDirectory *int, prefix []rune) error {
 	_, err := fmt.Fprintf(out, string(prefix))
 	if err != nil {
 		return err
@@ -94,7 +93,7 @@ func printFile(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefi
 	}
 }
 
-func printDir(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefix []rune) error {
+func printDir(out io.Writer, file os.FileInfo, filesLeftInDirectory *int, prefix []rune) error {
 	_, err := fmt.Fprintf(out, string(prefix))
 	if err != nil {
 		return err
