@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,12 +9,12 @@ import (
 	"os"
 )
 
-func dirTree(out *bytes.Buffer, path string, printFiles bool) error {
+func dirTree(out io.Writer, path string, printFiles bool) error {
 	return scanDir(out, path, printFiles, 0, []rune{})
 }
 
-func scanDir(buf *bytes.Buffer, path string, printFiles bool, shift int, prefix []rune) error {
-	out := bufio.NewWriter(buf)
+func scanDir(out io.Writer, path string, printFiles bool, shift int, prefix []rune) error {
+	//out := bufio.NewWriter(buf)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		log.Fatal(err)
@@ -81,12 +79,12 @@ func scanDir(buf *bytes.Buffer, path string, printFiles bool, shift int, prefix 
 			//fmt.Println("filesLeftInDirectory: ", filesLeftInDirectory)
 			//fmt.Println( "Entering new directory; >" + path + "/" + file.Name() + "<")
 			if filesLeftInDirectory > 0 {
-				err2 := scanDir(buf, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("│   ")...))
+				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("│   ")...))
 				if err2 != nil {
 					return err2
 				}
 			} else {
-				err2 := scanDir(buf, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("    ")...))
+				err2 := scanDir(out, path+"/"+file.Name(), printFiles, shift+1, append(prefix, []rune("    ")...))
 				if err2 != nil {
 					return err2
 				}
@@ -101,7 +99,7 @@ func printFile(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefi
 	//for i := 0; i < shift*1+0; i++ {
 	//	fmt.Printf("│   ")
 	//}
-	fmt.Printf(string(prefix))
+	fmt.Fprintf(out, string(prefix))
 	if *filesLeftInDirectory > 1 {
 		//_, err := fmt.Println("├───"+file.Name(), "         left ", filesLeftInDirectory, "\t shift ", shift)
 		//_, err := fmt.Printf("├───%.10s         left %d shift %d\n", file.Name(), *filesLeftInDirectory, shift)
@@ -123,7 +121,7 @@ func printDir(out io.Writer, file fs.FileInfo, filesLeftInDirectory *int, prefix
 	//for i := 0; i < shift*1+0; i++ {
 	//	fmt.Printf("│   ")
 	//}
-	fmt.Printf(string(prefix))
+	fmt.Fprintf(out, string(prefix))
 	if *filesLeftInDirectory > 1 {
 		//_, err := fmt.Printf("├───%.10s         left %d shift %d\n", file.Name(), *filesLeftInDirectory, shift)
 		_, err := fmt.Fprintf(out, "├───%s\n", file.Name())
@@ -152,9 +150,9 @@ func main() {
 	//	fmt.Println("Good number of arguments: ", len(os.Args))
 	path := os.Args[1]
 	printFiles := len(os.Args) == 3 && os.Args[2] == "-f"
-	//out := *os.File(os.Stdout)
-	out := new(bytes.Buffer)
-	err := dirTree(out, path, printFiles)
+	//out := &os.File(os.Stdout)
+	//out := new(os.Stdout)
+	err := dirTree(os.Stdout, path, printFiles)
 	if err != nil {
 		panic(err.Error())
 	}
